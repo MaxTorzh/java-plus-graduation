@@ -22,7 +22,5 @@
     </parent>
 
     <artifactId>stats-dto</artifactId>
-    <groupId>ewm</groupId>
-    <version>0.0.1-SNAPSHOT</version>
 
 </project>
