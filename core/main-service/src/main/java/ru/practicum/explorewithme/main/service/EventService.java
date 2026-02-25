@@ -28,5 +28,5 @@ public interface EventService {
 
     List<EventShortDto> getEventsPublic(PublicEventSearchParams params, int from, int size);
 
-    EventFullDto getEventByIdPublic(Long eventId);
+    EventFullDto getEventByIdPublic(Long eventId, String ipAddress);
 }

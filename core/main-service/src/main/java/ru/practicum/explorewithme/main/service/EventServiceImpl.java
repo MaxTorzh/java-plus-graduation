@@ -36,6 +36,7 @@ import ru.practicum.explorewithme.main.repository.UserRepository;
 import ru.practicum.explorewithme.main.service.params.AdminEventSearchParams;
 import ru.practicum.explorewithme.main.service.params.PublicEventSearchParams;
 import ru.practicum.explorewithme.stats.client.StatsClient;
+import ru.practicum.explorewithme.stats.dto.EndpointHitDto;
 import ru.practicum.explorewithme.stats.dto.ViewStatsDto;
 
 @Service
@@ -145,45 +146,33 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getEventByIdPublic(Long eventId) {
-        log.info("Public: Fetching event id={}", eventId);
+    public EventFullDto getEventByIdPublic(Long eventId, String ipAddress) {
+        log.info("Public: Fetching event id={}, IP={}", eventId, ipAddress);
 
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new EntityNotFoundException(
                         String.format("Event with id=%d not found or is not published.", eventId)));
 
-        long views = 0L;
         try {
-            String eventUri = "/events/" + event.getId();
-            List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.of(1970, 1, 1, 0, 0, 0), // Очень ранняя дата
-                    LocalDateTime.now(),
-                    List.of(eventUri),
-                    true // Уникальные просмотры
-            );
-
-            if (stats != null && !stats.isEmpty()) {
-                Optional<ViewStatsDto> eventStat = stats.stream()
-                        .filter(s -> eventUri.equals(s.getUri()))
-                        .findFirst();
-                if (eventStat.isPresent()) {
-                    views = eventStat.get().getHits();
-                }
-            }
-            log.debug("Public: Views for event id={}: {}", eventId, views);
+            EndpointHitDto hitDto = EndpointHitDto.builder()
+                    .app("ewm-main-service")
+                    .uri("/events/" + eventId)
+                    .ip(ipAddress != null ? ipAddress : "127.0.0.1")
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            statsClient.saveHit(hitDto);
+            log.info("Stats hit sent for event {}", eventId);
         } catch (Exception e) {
-            log.error("Public: Failed to retrieve views for event id={}. Error: {}", eventId, e.getMessage());
+            log.error("Failed to send stats hit: {}", e.getMessage());
         }
 
+        long views = getViewsForEvent(eventId);
         long confirmedRequestsCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        log.debug("Public: Confirmed requests for event id={}: {}", eventId, confirmedRequestsCount);
 
         EventFullDto resultDto = eventMapper.toEventFullDto(event);
         resultDto.setViews(views);
         resultDto.setConfirmedRequests(confirmedRequestsCount);
 
-        log.info("Public: Found event id={} with title='{}', views={}, confirmedRequests={}",
-                eventId, resultDto.getTitle(), resultDto.getViews(), resultDto.getConfirmedRequests());
         return resultDto;
     }
 

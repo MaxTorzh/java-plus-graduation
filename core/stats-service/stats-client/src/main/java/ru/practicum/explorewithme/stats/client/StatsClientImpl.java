@@ -31,7 +31,6 @@ public class StatsClientImpl implements StatsClient {
                             response.getStatusCode() + " " + response.getStatusText();
                     log.error(errorMessage);
 
-                    // Обработка ошибок по типу
                     if (response.getStatusCode().is4xxClientError()) {
                         throw new RestClientException("Ошибка клиентского запроса: " + errorMessage);
                     } else if (response.getStatusCode().is5xxServerError()) {
