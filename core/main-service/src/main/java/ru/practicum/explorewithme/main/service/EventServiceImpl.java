@@ -324,7 +324,7 @@ public class EventServiceImpl implements EventService {
         log.debug("Fetching events for owner (user) id: {}, from: {}, size: {}", userId, from, size);
 
         if (!userRepository.existsById(userId)) {
-            return Collections.emptyList(); // По спецификации API, если по заданным фильтрам не найдено ни одного события, возвращается пустой список
+            return Collections.emptyList();
         }
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "eventDate"));
@@ -336,8 +336,45 @@ public class EventServiceImpl implements EventService {
         }
 
         List<EventShortDto> result = eventMapper.toEventShortDtoList(eventPage.getContent());
+
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsForEvents(eventPage.getContent());
+        Map<Long, Long> viewsMap = getViewsForEvents(eventPage.getContent());
+
+        result.forEach(dto -> {
+            dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(dto.getId(), 0L));
+            dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L));
+        });
+
         log.debug("Found {} events for owner id: {} on page {}/{}", result.size(), userId, pageable.getPageNumber(), eventPage.getTotalPages());
         return result;
+    }
+
+    private Map<Long, Long> getConfirmedRequestsForEvents(List<Event> events) {
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+
+        if (eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Object[]> results = requestRepository.countByEventIdInAndStatus(
+                eventIds,
+                RequestStatus.CONFIRMED
+        );
+
+        Map<Long, Long> confirmedMap = new HashMap<>();
+        for (Object[] result : results) {
+            Long eventId = (Long) result[0];
+            Long count = (Long) result[1];
+            confirmedMap.put(eventId, count);
+        }
+
+        for (Long eventId : eventIds) {
+            confirmedMap.putIfAbsent(eventId, 0L);
+        }
+
+        return confirmedMap;
     }
 
     @Override
@@ -417,6 +454,12 @@ public class EventServiceImpl implements EventService {
                         String.format("Event with id=%d and initiatorId=%d not found", eventId, userId)));
 
         EventFullDto result = eventMapper.toEventFullDto(event);
+
+        long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        result.setConfirmedRequests(confirmedRequests);
+
+        result.setViews(getViewsForEvent(eventId));
+
         log.debug("Found event: {}", result);
         return result;
     }
@@ -425,21 +468,65 @@ public class EventServiceImpl implements EventService {
     public EventFullDto addEventPrivate(Long userId, NewEventDto newEventDto) {
         log.info("Добавление события {} пользователем {}", newEventDto, userId);
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Пользователь " +
-                "с id = " + userId + " не найден"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с id = " + userId + " не найден"));
 
         Long categoryId = newEventDto.getCategory();
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new EntityNotFoundException("Категория " +
-                "с id = " + categoryId + " не найдена"));
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Категория с id = " + categoryId + " не найдена"));
 
         LocalDateTime eventDate = newEventDto.getEventDate();
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new BusinessRuleViolationException("Дата должна быть не ранее, чем через 2 часа от текущего момента");
         }
 
-        Event event = eventMapper.toEvent(newEventDto);
+        Event event = new Event();
+
+        event.setAnnotation(newEventDto.getAnnotation());
+        event.setDescription(newEventDto.getDescription());
+        event.setEventDate(newEventDto.getEventDate());
+        event.setLocation(newEventDto.getLocation());
+        event.setTitle(newEventDto.getTitle());
+
+        event.setCategory(category);
         event.setInitiator(user);
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+
+        event.setPaid(newEventDto.getPaid() != null ? newEventDto.getPaid() : false);
+
+        if (newEventDto.getParticipantLimit() != null) {
+            event.setParticipantLimit(newEventDto.getParticipantLimit().intValue());
+        } else {
+            event.setParticipantLimit(0);
+        }
+
+        if (newEventDto.getRequestModeration() != null) {
+            event.setRequestModeration(newEventDto.getRequestModeration());
+        } else {
+            event.setRequestModeration(true);
+        }
+
+        if (newEventDto.getCommentsEnabled() != null) {
+            event.setCommentsEnabled(newEventDto.getCommentsEnabled());
+        } else {
+            event.setCommentsEnabled(true);
+        }
+
+        event.setCreatedOn(LocalDateTime.now());
+        event.setState(EventState.PENDING);
+        event.setConfirmedRequestsCount(0);
+        event.setPublishedOn(null);
+
+        Event savedEvent = eventRepository.save(event);
+
+        EventFullDto result = eventMapper.toEventFullDto(savedEvent);
+
+        result.setConfirmedRequests(0L);
+        result.setViews(0L);
+        result.setCreatedOn(savedEvent.getCreatedOn());
+        result.setState(savedEvent.getState());
+
+        log.info("Событие успешно создано с id: {}", savedEvent.getId());
+        return result;
     }
 
     private Map<Long, Long> getViewsForEvents(List<Event> events) {
@@ -462,7 +549,7 @@ public class EventServiceImpl implements EventService {
                     earliestCreation,
                     LocalDateTime.now(),
                     uris,
-                    true // Уникальные просмотры
+                    true
             );
             if (stats != null) {
                 for (ViewStatsDto stat : stats) {
@@ -478,5 +565,23 @@ public class EventServiceImpl implements EventService {
             log.error("Failed to retrieve views for multiple events. Error: {}", e.getMessage());
         }
         return viewsMap;
+    }
+
+    private long getViewsForEvent(Long eventId) {
+        try {
+            String eventUri = "/events/" + eventId;
+            List<ViewStatsDto> stats = statsClient.getStats(
+                    LocalDateTime.of(1970, 1, 1, 0, 0, 0),
+                    LocalDateTime.now(),
+                    List.of(eventUri),
+                    true
+            );
+            if (stats != null && !stats.isEmpty()) {
+                return stats.get(0).getHits();
+            }
+        } catch (Exception e) {
+            log.error("Failed to get views for event {}: {}", eventId, e.getMessage());
+        }
+        return 0L;
     }
 }

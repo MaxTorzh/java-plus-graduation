@@ -1,0 +1,11 @@
+{
+  "id": "stats-env",
+  "name": "Stats Service Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9090",
+      "enabled": true
+    }
+  ]
+}
