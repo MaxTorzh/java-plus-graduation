@@ -4,13 +4,8 @@ import com.querydsl.core.BooleanBuilder;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -358,16 +353,14 @@ public class EventServiceImpl implements EventService {
             return Collections.emptyMap();
         }
 
-        List<Object[]> results = requestRepository.countByEventIdInAndStatus(
-                eventIds,
-                RequestStatus.CONFIRMED
-        );
+        Set<Long> eventIdSet = new HashSet<>(eventIds);
+
+        List<RequestRepository.ConfirmedRequestCountProjection> projections =
+                requestRepository.countConfirmedRequestsForEventIds(eventIdSet);
 
         Map<Long, Long> confirmedMap = new HashMap<>();
-        for (Object[] result : results) {
-            Long eventId = (Long) result[0];
-            Long count = (Long) result[1];
-            confirmedMap.put(eventId, count);
+        for (RequestRepository.ConfirmedRequestCountProjection projection : projections) {
+            confirmedMap.put(projection.getEventId(), projection.getRequestCount());
         }
 
         for (Long eventId : eventIds) {
