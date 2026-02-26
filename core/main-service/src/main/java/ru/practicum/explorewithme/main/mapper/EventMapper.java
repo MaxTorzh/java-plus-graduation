@@ -14,7 +14,7 @@ public interface EventMapper {
 
     @Mappings({
             @Mapping(source = "confirmedRequestsCount", target = "confirmedRequests"),
-            @Mapping(target = "views", ignore = true)
+            @Mapping(target = "views", expression = "java(0L)")
     })
     EventFullDto toEventFullDto(Event event);
 
@@ -31,7 +31,7 @@ public interface EventMapper {
 
     @Mappings({
             @Mapping(source = "confirmedRequestsCount", target = "confirmedRequests"),
-            @Mapping(target = "views", ignore = true)
+            @Mapping(target = "views", expression = "java(0L)")
     })
     EventShortDto toEventShortDto(Event event);
 
