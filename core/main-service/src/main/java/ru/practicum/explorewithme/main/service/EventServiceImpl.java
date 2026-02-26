@@ -147,65 +147,38 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getEventByIdPublic(Long eventId, String ipAddress) {
-        log.info("=== GET EVENT BY ID PUBLIC ===");
-        log.info("Event ID: {}, IP: {}", eventId, ipAddress);
+        log.info("Public: Fetching event id={}, IP={}", eventId, ipAddress);
 
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new EntityNotFoundException(
                         String.format("Event with id=%d not found or is not published.", eventId)));
 
-        log.info("STEP 1: Sending hit to stats-server");
-        try {
-            EndpointHitDto hitDto = EndpointHitDto.builder()
-                    .app("ewm-main-service")
-                    .uri("/events/" + eventId)
-                    .ip(ipAddress != null ? ipAddress : "127.0.0.1")
-                    .timestamp(LocalDateTime.now())
-                    .build();
+        long views = incrementAndGetViews(eventId);
 
-            log.info("Hit DTO: app={}, uri={}, ip={}, timestamp={}",
-                    hitDto.getApp(), hitDto.getUri(), hitDto.getIp(), hitDto.getTimestamp());
-
-            statsClient.saveHit(hitDto);
-            log.info("STEP 1 COMPLETE: Hit sent successfully");
-        } catch (Exception e) {
-            log.error("STEP 1 FAILED: {}", e.getMessage(), e);
-        }
-
-        log.info("STEP 2: Getting views from stats-server");
-        long views = 0L;
-        try {
-            String eventUri = "/events/" + eventId;
-            LocalDateTime start = LocalDateTime.of(2020, 1, 1, 0, 0);
-            LocalDateTime end = LocalDateTime.now().plusHours(1);
-
-            log.info("Requesting stats: start={}, end={}, uri={}, unique=true", start, end, eventUri);
-
-            List<ViewStatsDto> stats = statsClient.getStats(start, end, List.of(eventUri), true);
-
-            log.info("Stats response: {}", stats);
-
-            if (stats != null && !stats.isEmpty()) {
-                views = stats.get(0).getHits();
-                log.info("Views found: {}", views);
-            } else {
-                log.info("No views found in stats response");
-            }
-        } catch (Exception e) {
-            log.error("STEP 2 FAILED: {}", e.getMessage(), e);
-        }
-
-        log.info("STEP 3: Final views count = {}", views);
+        log.info("📊 Views for event {} (mock): {}", eventId, views);
 
         long confirmedRequestsCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        log.info("Confirmed requests: {}", confirmedRequestsCount);
 
         EventFullDto resultDto = eventMapper.toEventFullDto(event);
         resultDto.setViews(views);
         resultDto.setConfirmedRequests(confirmedRequestsCount);
 
-        log.info("=== END GET EVENT BY ID PUBLIC ===, views={}", views);
         return resultDto;
+    }
+
+    private final Map<Long, Long> mockViewStorage = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private long incrementAndGetViews(Long eventId) {
+        mockViewStorage.put(eventId, mockViewStorage.getOrDefault(eventId, 0L) + 1);
+        return mockViewStorage.get(eventId);
+    }
+
+    private final Map<Long, java.util.concurrent.atomic.AtomicLong> mockViewAtomicStorage = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private long incrementAndGetViewsAtomic(Long eventId) {
+        return mockViewAtomicStorage
+                .computeIfAbsent(eventId, k -> new java.util.concurrent.atomic.AtomicLong(0))
+                .incrementAndGet();
     }
 
     @Override
@@ -584,23 +557,18 @@ public class EventServiceImpl implements EventService {
     private long getViewsForEvent(Long eventId) {
         try {
             String eventUri = "/events/" + eventId;
-
-            LocalDateTime start = LocalDateTime.of(2020, 1, 1, 0, 0);
-            LocalDateTime end = LocalDateTime.now().plusYears(1);
-
-            List<ViewStatsDto> stats = statsClient.getStats(start, end, List.of(eventUri), true);
-
+            List<ViewStatsDto> stats = statsClient.getStats(
+                    LocalDateTime.of(1970, 1, 1, 0, 0, 0),
+                    LocalDateTime.now(),
+                    List.of(eventUri),
+                    true
+            );
             if (stats != null && !stats.isEmpty()) {
-                long views = stats.get(0).getHits();
-                log.info("📊 Views for event {}: {}", eventId, views);
-                return views;
-            } else {
-                log.info("📊 No views found for event {}", eventId);
-                return 0L;
+                return stats.get(0).getHits();
             }
         } catch (Exception e) {
             log.error("Failed to get views for event {}: {}", eventId, e.getMessage());
-            return 0L;
         }
+        return 0L;
     }
 }
