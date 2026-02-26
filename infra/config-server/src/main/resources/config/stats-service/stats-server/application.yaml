@@ -13,7 +13,7 @@ spring:
     name: stats-server
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6543/stats-db
+    url: jdbc:postgresql://stats-db:5432/stats-db
     username: sdb
     password: password
   jpa:
