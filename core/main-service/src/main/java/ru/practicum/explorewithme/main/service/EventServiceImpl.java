@@ -584,18 +584,23 @@ public class EventServiceImpl implements EventService {
     private long getViewsForEvent(Long eventId) {
         try {
             String eventUri = "/events/" + eventId;
-            List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.of(1970, 1, 1, 0, 0, 0),
-                    LocalDateTime.now(),
-                    List.of(eventUri),
-                    true
-            );
+
+            LocalDateTime start = LocalDateTime.of(2020, 1, 1, 0, 0);
+            LocalDateTime end = LocalDateTime.now().plusYears(1);
+
+            List<ViewStatsDto> stats = statsClient.getStats(start, end, List.of(eventUri), true);
+
             if (stats != null && !stats.isEmpty()) {
-                return stats.get(0).getHits();
+                long views = stats.get(0).getHits();
+                log.info("📊 Views for event {}: {}", eventId, views);
+                return views;
+            } else {
+                log.info("📊 No views found for event {}", eventId);
+                return 0L;
             }
         } catch (Exception e) {
             log.error("Failed to get views for event {}: {}", eventId, e.getMessage());
+            return 0L;
         }
-        return 0L;
     }
 }
