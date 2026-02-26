@@ -1,30 +1,19 @@
 spring:
   application:
     name: main-service
-  profiles:
-    active: postgres
   config:
-    import: "configserver:http://config-server:8888"
+    import: "configserver:"
   cloud:
     config:
-      uri: http://config-server:8888
+      discovery:
+        enabled: true
+        serviceId: config-server
       fail-fast: true
       retry:
-        max-attempts: 60
-        initial-interval: 2000
-        multiplier: 1.5
-        max-interval: 10000
-      discovery:
-        enabled: false
+        useRandomPolicy: true
+        max-interval: 6000
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URI:http://discovery-server:8761/eureka/}
-    enabled: true
-  instance:
-    instance-id: "${spring.application.name}:${random.value}"
-    leaseRenewalIntervalInSeconds: 10
-
-stats-server:
-  url: http://stats-server:9090
+      defaultZone: http://localhost:8761/eureka/
