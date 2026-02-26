@@ -75,7 +75,6 @@ public class PublicEventController {
 
         log.info("Public: Received request to get event with id={}, IP={}", eventId, ipAddress);
 
-        // Определяем реальный IP
         String actualIp = ipAddress;
         if (actualIp == null) {
             String forwardedFor = request.getHeader("X-Forwarded-For");
@@ -86,7 +85,6 @@ public class PublicEventController {
             }
         }
 
-        // Передаём IP в сервис
         EventFullDto event = eventService.getEventByIdPublic(eventId, actualIp);
         log.info("Public: Found event: {}", event);
         return event;

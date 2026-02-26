@@ -23,3 +23,6 @@ eureka:
   instance:
     instance-id: "${spring.application.name}:${random.value}"
     leaseRenewalIntervalInSeconds: 10
+
+stats-server:
+  url: http://stats-server:9090
