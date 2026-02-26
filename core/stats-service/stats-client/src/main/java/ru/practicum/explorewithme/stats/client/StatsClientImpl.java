@@ -48,14 +48,21 @@ public class StatsClientImpl implements StatsClient {
 
     @Override
     public void saveHit(EndpointHitDto endpointHitDto) {
-        log.debug("Отправка данных статистики: {}", endpointHitDto);
-        restClient.post()
-                .uri("/hit")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(endpointHitDto)
-                .retrieve()
-                .toBodilessEntity();
-        log.debug("Статистика успешно сохранена");
+        log.info("=== STATS CLIENT SAVE HIT ===");
+        log.info("Sending hit: {}", endpointHitDto);
+
+        try {
+            restClient.post()
+                    .uri("/hit")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(endpointHitDto)
+                    .retrieve()
+                    .toBodilessEntity();
+            log.info("Hit saved successfully");
+        } catch (Exception e) {
+            log.error("Failed to save hit: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override

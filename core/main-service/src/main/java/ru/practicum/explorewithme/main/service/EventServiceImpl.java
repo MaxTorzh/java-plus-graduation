@@ -147,12 +147,14 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getEventByIdPublic(Long eventId, String ipAddress) {
-        log.info("Public: Fetching event id={}, IP={}", eventId, ipAddress);
+        log.info("=== GET EVENT BY ID PUBLIC ===");
+        log.info("Event ID: {}, IP: {}", eventId, ipAddress);
 
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new EntityNotFoundException(
                         String.format("Event with id=%d not found or is not published.", eventId)));
 
+        log.info("STEP 1: Sending hit to stats-server");
         try {
             EndpointHitDto hitDto = EndpointHitDto.builder()
                     .app("ewm-main-service")
@@ -160,19 +162,49 @@ public class EventServiceImpl implements EventService {
                     .ip(ipAddress != null ? ipAddress : "127.0.0.1")
                     .timestamp(LocalDateTime.now())
                     .build();
+
+            log.info("Hit DTO: app={}, uri={}, ip={}, timestamp={}",
+                    hitDto.getApp(), hitDto.getUri(), hitDto.getIp(), hitDto.getTimestamp());
+
             statsClient.saveHit(hitDto);
-            log.info("Stats hit sent for event {}", eventId);
+            log.info("STEP 1 COMPLETE: Hit sent successfully");
         } catch (Exception e) {
-            log.error("Failed to send stats hit: {}", e.getMessage());
+            log.error("STEP 1 FAILED: {}", e.getMessage(), e);
         }
 
-        long views = getViewsForEvent(eventId);
+        log.info("STEP 2: Getting views from stats-server");
+        long views = 0L;
+        try {
+            String eventUri = "/events/" + eventId;
+            LocalDateTime start = LocalDateTime.of(2020, 1, 1, 0, 0);
+            LocalDateTime end = LocalDateTime.now().plusHours(1);
+
+            log.info("Requesting stats: start={}, end={}, uri={}, unique=true", start, end, eventUri);
+
+            List<ViewStatsDto> stats = statsClient.getStats(start, end, List.of(eventUri), true);
+
+            log.info("Stats response: {}", stats);
+
+            if (stats != null && !stats.isEmpty()) {
+                views = stats.get(0).getHits();
+                log.info("Views found: {}", views);
+            } else {
+                log.info("No views found in stats response");
+            }
+        } catch (Exception e) {
+            log.error("STEP 2 FAILED: {}", e.getMessage(), e);
+        }
+
+        log.info("STEP 3: Final views count = {}", views);
+
         long confirmedRequestsCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        log.info("Confirmed requests: {}", confirmedRequestsCount);
 
         EventFullDto resultDto = eventMapper.toEventFullDto(event);
         resultDto.setViews(views);
         resultDto.setConfirmedRequests(confirmedRequestsCount);
 
+        log.info("=== END GET EVENT BY ID PUBLIC ===, views={}", views);
         return resultDto;
     }
 
