@@ -1,8 +1,8 @@
-package ru.practicum.explore_with_me.category.dao;
+package ru.practicum.category.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explore_with_me.category.model.Category;
+import ru.practicum.category.model.Category;
 
 import java.util.Optional;
 

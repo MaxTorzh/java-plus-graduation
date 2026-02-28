@@ -1,6 +1,7 @@
-package ru.practicum.explore_with_me.category.service;
+package ru.practicum.category.service;
 
-import ru.practicum.explore_with_me.category.dto.CategoryDto;
+
+import ru.practicum.dto.category.CategoryDto;
 
 import java.util.Collection;
 

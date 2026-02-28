@@ -1,4 +1,4 @@
-package ru.practicum.explore_with_me.error.model;
+package ru.practicum.exception;
 
 public class AlreadyPublishedException extends RuntimeException {
     public AlreadyPublishedException(String message) {
