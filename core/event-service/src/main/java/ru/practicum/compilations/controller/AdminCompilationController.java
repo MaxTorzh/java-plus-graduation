@@ -1,21 +1,22 @@
-package ru.practicum.explore_with_me.compilations.controller;
+package ru.practicum.compilations.controller;
 
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.explore_with_me.compilations.dto.CompilationDto;
-import ru.practicum.explore_with_me.compilations.dto.CompilationResponse;
-import ru.practicum.explore_with_me.compilations.service.CompilationService;
+import ru.practicum.compilations.service.CompilationService;
+import ru.practicum.dto.compilations.CompilationDto;
+import ru.practicum.dto.compilations.CompilationResponse;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin/compilations")
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AdminCompilationController {
     final CompilationService compilationService;
 
@@ -32,7 +33,6 @@ public class AdminCompilationController {
     }
 
     @PatchMapping("/{compId}")
-    @ResponseStatus(HttpStatus.OK)
     public CompilationResponse patchCompilation(@PathVariable Long compId,
                                                 @Validated(CompilationDto.OnUpdate.class) @Valid @RequestBody CompilationDto updateCompilationRequest) {
         return compilationService.update(compId, updateCompilationRequest);
