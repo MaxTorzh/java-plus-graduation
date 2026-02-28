@@ -1,11 +1,11 @@
-package ru.practicum.explore_with_me.event.dao;
+package ru.practicum.event.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explore_with_me.event.model.Event;
+import ru.practicum.event.model.Event;
 
 import java.util.Optional;
 import java.util.Set;

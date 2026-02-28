@@ -1,11 +1,10 @@
-package ru.practicum.explore_with_me.event.model;
+package ru.practicum.event.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.category.model.Category;
-import ru.practicum.explore_with_me.event.model.enums.EventState;
-import ru.practicum.explore_with_me.user.model.User;
+import ru.practicum.category.model.Category;
+import ru.practicum.dto.event.enums.EventState;
 
 import java.time.LocalDateTime;
 
@@ -25,9 +24,7 @@ public class Event {
     @JoinColumn(name = "category_id")
     Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id")
-    User initiator;
+    Long initiatorId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")

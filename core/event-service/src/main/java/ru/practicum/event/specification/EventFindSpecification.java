@@ -1,12 +1,12 @@
-package ru.practicum.explore_with_me.event.specification;
+package ru.practicum.event.specification;
 
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
-import ru.practicum.explore_with_me.event.model.Event;
-import ru.practicum.explore_with_me.event.model.enums.EventState;
-import ru.practicum.explore_with_me.event.model.enums.SortType;
+import ru.practicum.dto.event.enums.EventState;
+import ru.practicum.dto.event.enums.SortType;
+import ru.practicum.event.model.Event;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -27,7 +27,7 @@ public class EventFindSpecification {
             if (users == null || users.isEmpty()) {
                 return null;
             }
-            return root.get("initiator").get("id").in(users);
+            return root.get("initiatorId").in(users);
         });
     }
 

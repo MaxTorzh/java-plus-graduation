@@ -1,8 +1,8 @@
-package ru.practicum.explore_with_me.event.dto;
+package ru.practicum.dto.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.request.model.enums.RequestStatus;
+import ru.practicum.dto.request.enums.RequestStatus;
 
 import java.util.List;
 

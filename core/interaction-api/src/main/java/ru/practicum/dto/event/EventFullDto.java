@@ -1,11 +1,11 @@
-package ru.practicum.explore_with_me.event.dto;
+package ru.practicum.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.category.dto.CategoryDto;
-import ru.practicum.explore_with_me.event.model.enums.EventState;
-import ru.practicum.explore_with_me.user.dto.UserShortDto;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.event.enums.EventState;
+import ru.practicum.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;
 
@@ -28,8 +28,10 @@ public class EventFullDto {
     Long views;
     Long confirmedRequests;
     String description;
+
     @Builder.Default
     Integer participantLimit = 0;
+
     EventState state;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -39,6 +41,7 @@ public class EventFullDto {
     LocalDateTime publishedOn;
 
     LocationDto location;
+
     @Builder.Default
     Boolean requestModeration = true;
 }

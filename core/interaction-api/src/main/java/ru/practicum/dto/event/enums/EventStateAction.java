@@ -1,4 +1,4 @@
-package ru.practicum.explore_with_me.event.model.enums;
+package ru.practicum.dto.event.enums;
 
 public enum EventStateAction {
     PUBLISH_EVENT,

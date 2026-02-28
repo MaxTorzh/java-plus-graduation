@@ -1,4 +1,4 @@
-package ru.practicum.explore_with_me.event.validation;
+package ru.practicum.dto.event.validation;
 
 import jakarta.validation.Constraint;
 

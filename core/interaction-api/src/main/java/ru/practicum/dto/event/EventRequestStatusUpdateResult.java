@@ -1,8 +1,8 @@
-package ru.practicum.explore_with_me.event.dto;
+package ru.practicum.dto.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.request.dto.RequestDto;
+import ru.practicum.dto.request.RequestDto;
 
 import java.util.List;
 

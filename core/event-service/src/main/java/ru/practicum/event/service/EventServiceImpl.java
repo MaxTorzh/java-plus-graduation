@@ -1,7 +1,5 @@
-package ru.practicum.explore_with_me.event.service;
+package ru.practicum.event.service;
 
-import dto.GetResponse;
-import dto.HitRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -18,28 +16,29 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.client.StatsClient;
-import ru.practicum.explore_with_me.error.model.*;
-import ru.practicum.explore_with_me.event.dao.EventRepository;
-import ru.practicum.explore_with_me.event.dao.LocationRepository;
-import ru.practicum.explore_with_me.event.dto.*;
-import ru.practicum.explore_with_me.event.mapper.EventMapper;
-import ru.practicum.explore_with_me.event.model.Event;
-import ru.practicum.explore_with_me.event.model.Location;
-import ru.practicum.explore_with_me.event.model.enums.EventState;
-import ru.practicum.explore_with_me.event.model.enums.EventStateAction;
-import ru.practicum.explore_with_me.event.model.enums.SortType;
-import ru.practicum.explore_with_me.event.specification.EventFindSpecification;
-import ru.practicum.explore_with_me.request.dao.RequestRepository;
-import ru.practicum.explore_with_me.request.dto.RequestDto;
-import ru.practicum.explore_with_me.request.mapper.RequestMapper;
-import ru.practicum.explore_with_me.request.model.Request;
-import ru.practicum.explore_with_me.request.model.enums.RequestStatus;
-import ru.practicum.explore_with_me.user.dao.UserRepository;
-import ru.practicum.explore_with_me.user.model.User;
+import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.enums.EventState;
+import ru.practicum.dto.event.enums.EventStateAction;
+import ru.practicum.dto.event.enums.SortType;
+import ru.practicum.dto.request.RequestDto;
+import ru.practicum.dto.stats.GetResponse;
+import ru.practicum.dto.stats.HitRequest;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
+import ru.practicum.event.mapper.EventMapper;
+import ru.practicum.event.model.Event;
+import ru.practicum.event.model.Location;
+import ru.practicum.event.repository.EventRepository;
+import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.event.specification.EventFindSpecification;
+import ru.practicum.exception.*;
+import ru.practicum.feign.RequestClient;
+import ru.practicum.feign.StatsClient;
+import ru.practicum.feign.UserClient;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,12 +46,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventServiceImpl implements EventService {
+
     final EventRepository eventRepository;
-    final RequestRepository requestRepository;
+    final RequestClient requestClient;
     final EventMapper eventMapper;
-    final RequestMapper requestMapper;
     final LocationRepository locationRepository;
-    final UserRepository userRepository;
+    final UserClient userClient;
     final EntityManager entityManager;
     final StatsClient statsClient;
 
@@ -100,18 +99,22 @@ public class EventServiceImpl implements EventService {
         log.info("Get events with {users, states, categories, rangeStart, rangeEnd, from, size} = ({},{},{},{},{},{},{})",
                 users, size, categories, rangeStart, rangeEnd, from, size);
 
-        List<Request> confirmedRequestsByEventId = requestRepository.findAllByEventIdInAndStatus(
-                page.stream().map(Event::getId).toList(), RequestStatus.CONFIRMED);
-
-        Map<Long, List<Request>> eventIdToConfirmedRequests = confirmedRequestsByEventId.stream()
-                .collect(Collectors.groupingBy(request -> request.getEvent().getId()));
+        Map<Long, List<RequestDto>> eventIdToConfirmedRequests = requestClient.getConfirmedRequests(page.stream()
+                .map(Event::getId).toList());
+        List<Long> initiatorIds = page.stream().map(Event::getInitiatorId).toList();
+        Map<Long, UserDto> usersMap = userClient.getUsers(initiatorIds, 0, initiatorIds.size()).stream()
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
 
         return page.stream()
                 .map(event -> {
-                    event.setConfirmedRequests(eventIdToConfirmedRequests.getOrDefault(
+                    EventFullDto eventFullDto = eventMapper.toFullDto(event);
+                    eventFullDto.setConfirmedRequests((long) eventIdToConfirmedRequests.getOrDefault(
                             event.getId(),
                             Collections.emptyList()).size());
-                    return eventMapper.toFullDto(event);
+                    long initiatorId = usersMap.get(event.getInitiatorId()).getId();
+                    String initiatorName = usersMap.get(event.getInitiatorId()).getName();
+                    eventFullDto.setInitiator(UserShortDto.builder().id(initiatorId).name(initiatorName).build());
+                    return eventFullDto;
                 })
                 .toList();
     }
@@ -206,9 +209,9 @@ public class EventServiceImpl implements EventService {
         Location location = findLocationByLatAndLon(newEventDto.getLocation().getLat(),
                 newEventDto.getLocation().getLon());
 
-        User user = findUserById(userId);
+        findUserById(userId);
 
-        event.setInitiator(user);
+        event.setInitiatorId(userId);
         event.setLocation(location);
 
         log.info("Create new event with userId = {}", userId);
@@ -263,69 +266,18 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<RequestDto> getRequests(Long userId, Long eventId) {
-        getVerifiedEvent(userId, eventId);
-
-        Set<Request> requests = requestRepository.findAllByEventId(eventId);
-
-        return requests.stream().map(requestMapper::toRequestDto).toList();
+    public EventFullDto getEventByIdFeign(Long eventId) {
+        Event event = findEventById(eventId);
+        EventFullDto eventFullDto = eventMapper.toFullDto(event);
+        UserDto userDto = userClient.getUserById(event.getInitiatorId());
+        UserShortDto userShortDto = UserShortDto.builder().id(userDto.getId()).name(userDto.getName()).build();
+        eventFullDto.setInitiator(userShortDto);
+        return eventFullDto;
     }
 
     @Override
-    @Transactional
-    public EventRequestStatusUpdateResult updateRequest(Long userId, Long eventId,
-                                                        EventRequestStatusUpdateRequest updateRequest) {
-        Event event = getVerifiedEvent(userId, eventId);
-
-        List<Request> requests = requestRepository.findAllByIdIn(updateRequest.getRequestIds());
-
-        for (Request request : requests) {
-            if (!request.getEvent().getId().equals(eventId)) {
-                throw new NotFoundException("Request with requestId = " + request.getId() + "does not match eventId = " + eventId);
-            }
-        }
-
-        int confirmedCount = requestRepository.findAllByEventIdAndStatus(eventId, RequestStatus.CONFIRMED).size();
-        int size = updateRequest.getRequestIds().size();
-        int confirmedSize = updateRequest.getStatus().equals(RequestStatus.CONFIRMED) ? size : 0;
-
-        if (event.getParticipantLimit() != 0 && confirmedCount + confirmedSize > event.getParticipantLimit()) {
-            throw new TooManyRequestsException("Event limit exceed");
-        }
-
-        List<RequestDto> confirmedRequests = new ArrayList<>();
-        List<RequestDto> rejectedRequests = new ArrayList<>();
-
-        for (Request request : requests) {
-            if (updateRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
-                request.setStatus(RequestStatus.CONFIRMED);
-                confirmedRequests.add(requestMapper.toRequestDto(request));
-            } else if (updateRequest.getStatus().equals(RequestStatus.REJECTED)) {
-                if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
-                    throw new AlreadyConfirmedException("The request cannot be rejected if it is confirmed");
-                }
-                request.setStatus(RequestStatus.REJECTED);
-                rejectedRequests.add(requestMapper.toRequestDto(request));
-            }
-        }
-
-        requestRepository.saveAll(requests);
-
-        return EventRequestStatusUpdateResult.builder()
-                .confirmedRequests(confirmedRequests)
-                .rejectedRequests(rejectedRequests)
-                .build();
-    }
-
-    private Event getVerifiedEvent(Long userId, Long eventId) {
-        findUserById(userId);
-
-        Event event = findEventById(eventId);
-
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new NotFoundException("The event initiator does not match the user id");
-        }
-        return event;
+    public EventFullDto getEventByUserFeign(Long userId, Long eventId) {
+        return getEventById(userId, eventId);
     }
 
     private void stateChanger(Event event, EventStateAction stateAction) {
@@ -424,12 +376,12 @@ public class EventServiceImpl implements EventService {
 
     private Event findEventByIdAndInitiatorId(Long userId, Long eventId) {
         return eventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%d and userId=%d not found", eventId, userId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id = %d and userId=%d not found",
+                        eventId, userId)));
     }
 
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException(String.format("User with id=%d + not found", userId)));
+    private void findUserById(Long userId) {
+        userClient.getUserById(userId);
     }
 
     private Location findLocationByLatAndLon(Float lat, Float lon) {

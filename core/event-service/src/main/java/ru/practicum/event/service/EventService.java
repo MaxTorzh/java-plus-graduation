@@ -1,8 +1,7 @@
-package ru.practicum.explore_with_me.event.service;
+package ru.practicum.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.practicum.explore_with_me.event.dto.*;
-import ru.practicum.explore_with_me.request.dto.RequestDto;
+import ru.practicum.dto.event.*;
 
 import java.util.Collection;
 
@@ -19,11 +18,11 @@ public interface EventService {
 
     EventFullDto getEventById(Long userId, Long eventId);
 
+    EventFullDto getEventByIdFeign(Long eventId);
+
     EventFullDto getEventByIdPublic(Long eventId, HttpServletRequest httpServletRequest);
 
     EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest updateRequest);
 
-    Collection<RequestDto> getRequests(Long userId, Long eventId);
-
-    EventRequestStatusUpdateResult updateRequest(Long userId, Long eventId, EventRequestStatusUpdateRequest updateRequest);
+    EventFullDto getEventByUserFeign(Long eventId, Long userId);
 }
