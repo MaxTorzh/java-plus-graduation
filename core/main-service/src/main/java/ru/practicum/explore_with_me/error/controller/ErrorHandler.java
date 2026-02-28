@@ -249,4 +249,30 @@ public class ErrorHandler {
                 .status(HttpStatus.CONFLICT.toString())
                 .build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleException(Exception e) {
+        String reasonMessage = "Unexpected error";
+        log.error("INTERNAL_SERVER_ERROR: {}", reasonMessage, e);
+        return ErrorResponse.builder()
+                .errors(List.of(e.getMessage() != null ? e.getMessage() : "No message"))
+                .message(e.getMessage() != null ? e.getMessage() : "Unexpected error occurred")
+                .reason(reasonMessage)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleThrowable(Throwable e) {
+        String reasonMessage = "Critical error";
+        log.error("INTERNAL_SERVER_ERROR: {}", reasonMessage, e);
+        return ErrorResponse.builder()
+                .errors(List.of(e.getMessage() != null ? e.getMessage() : "No message"))
+                .message("Critical system error")
+                .reason(reasonMessage)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
+                .build();
+    }
 }
