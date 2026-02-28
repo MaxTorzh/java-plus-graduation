@@ -1,20 +1,38 @@
 server:
   port: 0
-stats:
-  server:
-    url: http://stats-server
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.orm.jpa: INFO
+    org.springframework.transaction: INFO
+    org.springframework.transaction.interceptor: INFO
+    org.springframework.orm.jpa.JpaTransactionManager: INFO
+    org.zalando.logbook: TRACE
+
 spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6542/ewm-db
+    username: ewm
+    password: password
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
   sql:
     init:
       mode: always
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/ewm_main
-    username: test
-    password: test
+
+hibernate:
+  jdbc:
+    time_zone: UTC
+
+logbook:
+  format:
+    style: http
+
+stats-server:
+  name: stats-server

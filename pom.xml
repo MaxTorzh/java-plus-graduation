@@ -10,27 +10,94 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<name>Explore With Me</name>
-
 	<groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<name>Explore With Me</name>
+	<modules>
+		<module>core</module>
+		<module>infra</module>
+		<module>stats-service</module>
+	</modules>
+
 	<properties>
 		<java.version>21</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<spring-cloud-dependencies.version>2023.0.3</spring-cloud-dependencies.version>
 	</properties>
 
-	<modules>
-		<module>core</module>
-		<module>stats</module>
-		<module>infra</module>
-	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud-dependencies.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<failOnViolation>true</failOnViolation>
+					<logViolationsToConsole>true</logViolationsToConsole>
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<phase>compile</phase>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>10.21.2</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.11.0</version>
+					<configuration>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>1.18.34</version>
+							</path>
+							<path>
+								<groupId>org.mapstruct</groupId>
+								<artifactId>mapstruct-processor</artifactId>
+								<version>1.6.2</version>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
@@ -62,7 +129,7 @@
 						<dependency>
 							<groupId>com.puppycrawl.tools</groupId>
 							<artifactId>checkstyle</artifactId>
-							<version>10.3</version>
+							<version>10.21.2</version>
 						</dependency>
 					</dependencies>
 				</plugin>
@@ -161,6 +228,28 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-checkstyle-plugin</artifactId>
+						<version>3.1.2</version>
+						<configuration>
+							<configLocation>checkstyle.xml</configLocation>
+							<failOnViolation>true</failOnViolation>
+							<logViolationsToConsole>true</logViolationsToConsole>
+							<includeTestSourceDirectory>true</includeTestSourceDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>check</goal>
+								</goals>
+								<phase>compile</phase>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>com.puppycrawl.tools</groupId>
+								<artifactId>checkstyle</artifactId>
+								<version>10.21.2</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 					<plugin>
 						<groupId>com.github.spotbugs</groupId>
@@ -189,17 +278,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>2023.0.3</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 </project>
