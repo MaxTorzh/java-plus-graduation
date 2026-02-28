@@ -1,12 +1,12 @@
-package ru.practicum.explore_with_me.event.dto;
+package ru.practicum.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.event.model.enums.EventStateAction;
-import ru.practicum.explore_with_me.event.validation.EventDateTime;
+import ru.practicum.dto.event.enums.EventStateAction;
+import ru.practicum.dto.event.validation.EventDateTime;
 
 import java.time.LocalDateTime;
 

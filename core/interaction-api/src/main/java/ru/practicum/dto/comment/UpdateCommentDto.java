@@ -1,11 +1,9 @@
-package ru.practicum.explore_with_me.comment.dto;
+package ru.practicum.dto.comment;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MergeCommentRequest {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UpdateCommentDto {
     @NotNull(message = "Event id is required")
     Long eventId;
 
