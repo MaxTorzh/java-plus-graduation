@@ -1,7 +1,7 @@
-package ru.practicum.explore_with_me.compilations.specification;
+package ru.practicum.compilations.specification;
 
 import org.springframework.data.jpa.domain.Specification;
-import ru.practicum.explore_with_me.compilations.model.Compilation;
+import ru.practicum.compilations.model.Compilation;
 
 public class CompilationFindSpecification {
     public static Specification<Compilation> byPinned(Boolean pinned) {

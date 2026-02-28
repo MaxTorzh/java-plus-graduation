@@ -1,4 +1,4 @@
-package ru.practicum.explore_with_me.error.controller;
+package ru.practicum.exception.handler;
 
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
@@ -6,11 +6,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import ru.practicum.explore_with_me.error.model.*;
+import ru.practicum.exception.*;
 
 import java.util.List;
 
@@ -37,6 +38,19 @@ public class ErrorHandler {
         return ErrorResponse.builder()
                 .errors(List.of(errorMessage))
                 .message(errorMessage)
+                .reason(reasonMessage)
+                .status(HttpStatus.CONFLICT.toString())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleEventIdIncorrectException(EventIdIncorrectException e) {
+        String reasonMessage = "Integrity violation";
+        log.error("CONFLICT: {}", reasonMessage, e);
+        return ErrorResponse.builder()
+                .errors(List.of(e.getMessage()))
+                .message(e.getMessage())
                 .reason(reasonMessage)
                 .status(HttpStatus.CONFLICT.toString())
                 .build();
@@ -81,49 +95,33 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({
+            ValidationException.class,
+            UpdateStartDateException.class,
+            MethodArgumentNotValidException.class,
+            HandlerMethodValidationException.class,
+            IllegalArgumentException.class,
+            MissingServletRequestParameterException.class,
+            ServiceUnavailableException.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(ValidationException e) {
-        String reasonMessage = "Validation failed";
-        log.error("BAD_REQUEST: {}", reasonMessage, e);
-        return ErrorResponse.builder()
-                .errors(List.of(e.getMessage()))
-                .message(e.getMessage())
-                .reason(reasonMessage)
-                .status(HttpStatus.BAD_REQUEST.toString())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleUpdateStartDateException(UpdateStartDateException e) {
-        String reasonMessage = "Update start date failed";
-        log.error("BAD_REQUEST: {}", reasonMessage, e);
-        return ErrorResponse.builder()
-                .errors(List.of(e.getMessage()))
-                .message(e.getMessage())
-                .reason(reasonMessage)
-                .status(HttpStatus.BAD_REQUEST.toString())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHttpMessageNotReadableException(MethodArgumentNotValidException e) {
-        String reasonMessage = "Method argument not valid";
-        log.error("BAD_REQUEST: {}", reasonMessage, e);
-        return ErrorResponse.builder()
-                .errors(List.of(e.getMessage()))
-                .message(e.getMessage())
-                .reason(reasonMessage)
-                .status(HttpStatus.BAD_REQUEST.toString())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHandlerMethodValidationException(HandlerMethodValidationException e) {
-        String reasonMessage = "Handler method not valid";
+    public ErrorResponse handleBadRequestException(Exception e) {
+        String reasonMessage;
+        if (e instanceof ValidationException) {
+            reasonMessage = "Validation failed";
+        } else if (e instanceof UpdateStartDateException) {
+            reasonMessage = "Update start date failed";
+        } else if (e instanceof MethodArgumentNotValidException) {
+            reasonMessage = "Method argument not valid";
+        } else if (e instanceof HandlerMethodValidationException) {
+            reasonMessage = "Handler method not valid";
+        } else if (e instanceof IllegalArgumentException) {
+            reasonMessage = "Not valid request";
+        } else if (e instanceof MissingServletRequestParameterException) {
+            reasonMessage = "Missing request parameter";
+        } else {
+            reasonMessage = "Service unavailable";
+        }
         log.error("BAD_REQUEST: {}", reasonMessage, e);
         return ErrorResponse.builder()
                 .errors(List.of(e.getMessage()))

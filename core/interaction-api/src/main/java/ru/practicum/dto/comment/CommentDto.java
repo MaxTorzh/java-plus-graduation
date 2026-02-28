@@ -1,9 +1,9 @@
-package ru.practicum.explore_with_me.comment.dto;
+package ru.practicum.dto.comment;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.explore_with_me.event.dto.EventShortDto;
-import ru.practicum.explore_with_me.user.dto.UserResponse;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.user.UserDto;
 
 import java.time.LocalDateTime;
 
@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CommentResponse {
+public class CommentDto {
     Long id;
     String text;
-    UserResponse author;
+    UserDto author;
     LocalDateTime publishedOn;
     EventShortDto event;
 }

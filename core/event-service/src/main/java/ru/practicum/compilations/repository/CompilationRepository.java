@@ -1,10 +1,9 @@
-package ru.practicum.explore_with_me.compilations.dao;
+package ru.practicum.compilations.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explore_with_me.compilations.model.Compilation;
-
+import ru.practicum.compilations.model.Compilation;
 import java.util.Optional;
 
 @Repository

@@ -1,7 +1,7 @@
-package ru.practicum.explore_with_me.compilations.service;
+package ru.practicum.compilations.service;
 
-import ru.practicum.explore_with_me.compilations.dto.CompilationDto;
-import ru.practicum.explore_with_me.compilations.dto.CompilationResponse;
+import ru.practicum.dto.compilations.CompilationDto;
+import ru.practicum.dto.compilations.CompilationResponse;
 
 import java.util.Collection;
 
