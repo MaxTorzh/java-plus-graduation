@@ -20,3 +20,10 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  group-id:
+    action: ${KAFKA_GROUP_ID_ACTION:analyzer-action-group}
+    similarity: ${KAFKA_GROUP_ID_SIMILARITY:analyzer-similarity-group}
+  auto-commit: ${KAFKA_AUTO_COMMIT:true}
