@@ -4,7 +4,14 @@ server:
 spring:
   application:
     name: aggregator
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+
+---
+spring:
   config:
+    activate:
+      on-profile: default
     import: "configserver:"
   cloud:
     config:
@@ -21,10 +28,8 @@ eureka:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
-    hostname: ${HOSTNAME:localhost}
-    instance-id: ${spring.application.name}:${random.uuid}
     metadata-map:
-      gRPC_port: ${grpc.server.port:9092}
+      gRPC_port: 9092
 
 grpc:
   server:
@@ -32,8 +37,45 @@ grpc:
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  action-topic: user-actions
+  action-topic: stats.user-actions.v1
   similarity-topic: event-similarity
   group-id: aggregator-group
   auto-commit: ${KAFKA_AUTO_COMMIT:true}
   enabled: ${KAFKA_ENABLED:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: github
+    import: ""
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    metadata-map:
+      gRPC_port: 9092
+
+grpc:
+  server:
+    port: 9092
+
+kafka:
+  enabled: false
+  bootstrap-servers:
+  action-topic: stats.user-actions.v1
+  similarity-topic: event-similarity
+  group-id: aggregator-group
+  auto-commit: true
+
+logging:
+  level:
+    ru.practicum: DEBUG

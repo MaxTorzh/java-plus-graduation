@@ -4,7 +4,14 @@ server:
 spring:
   application:
     name: analyzer
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+
+---
+spring:
   config:
+    activate:
+      on-profile: default
     import: "configserver:"
   cloud:
     config:
@@ -15,16 +22,26 @@ spring:
       retry:
         useRandomPolicy: true
         max-interval: 6000
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analyzer
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
   instance:
-    hostname: ${HOSTNAME:localhost}
-    instance-id: ${spring.application.name}:${random.uuid}
     metadata-map:
-      gRPC_port: ${grpc.server.port:9093}
+      gRPC_port: 9093
 
 grpc:
   server:
@@ -33,7 +50,7 @@ grpc:
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
   topics:
-    action: user-actions
+    action: stats.user-actions.v1
     similarity: event-similarity
   group-id:
     action: analyzer-action-group
@@ -41,21 +58,57 @@ kafka:
   auto-commit: ${KAFKA_AUTO_COMMIT:true}
   enabled: ${KAFKA_ENABLED:true}
 
-spring.datasource:
-  url: jdbc:postgresql://localhost:5432/analyzer
-  username: postgres
-  password: postgres
-  driver-class-name: org.postgresql.Driver
-
-spring.jpa:
-  hibernate:
-    ddl-auto: update
-  show-sql: true
-  properties:
-    hibernate:
-      dialect: org.hibernate.dialect.PostgreSQLDialect
-
 user-action:
   view: 0.4
   register: 0.8
   like: 1.0
+
+---
+spring:
+  config:
+    activate:
+      on-profile: github
+    import: ""
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+eureka:
+  client:
+    enabled: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    metadata-map:
+      gRPC_port: 9093
+
+grpc:
+  server:
+    port: 9093
+
+kafka:
+  enabled: false
+  bootstrap-servers:
+  topics:
+    action: stats.user-actions.v1
+    similarity: event-similarity
+  group-id:
+    action: analyzer-action-group
+    similarity: analyzer-similarity-group
+  auto-commit: true
+
+logging:
+  level:
+    ru.practicum: DEBUG
