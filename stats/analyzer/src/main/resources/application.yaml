@@ -1,3 +1,6 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: analyzer
@@ -17,3 +20,43 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME:localhost}
+    instance-id: ${spring.application.name}:${random.uuid}
+    metadata-map:
+      gRPC_port: ${grpc.server.port:9093}
+
+grpc:
+  server:
+    port: 9093
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  topics:
+    action: user-actions
+    similarity: event-similarity
+  group-id:
+    action: analyzer-action-group
+    similarity: analyzer-similarity-group
+  auto-commit: ${KAFKA_AUTO_COMMIT:true}
+  enabled: ${KAFKA_ENABLED:true}
+
+# Настройки для работы с БД
+spring.datasource:
+  url: jdbc:postgresql://localhost:5432/analyzer
+  username: postgres
+  password: postgres
+  driver-class-name: org.postgresql.Driver
+
+spring.jpa:
+  hibernate:
+    ddl-auto: validate
+  show-sql: true
+  properties:
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+
+user-action:
+  view: 0.4
+  register: 0.8
+  like: 1.0

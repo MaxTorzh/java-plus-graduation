@@ -1,3 +1,6 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: aggregator
@@ -17,9 +20,20 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: ${HOSTNAME:localhost}
+    instance-id: ${spring.application.name}:${random.uuid}
+    metadata-map:
+      gRPC_port: ${grpc.server.port:9092}
+
+grpc:
+  server:
+    port: 9092
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  topic: user-actions
+  action-topic: user-actions
+  similarity-topic: event-similarity
   group-id: aggregator-group
+  auto-commit: ${KAFKA_AUTO_COMMIT:true}
   enabled: ${KAFKA_ENABLED:true}
