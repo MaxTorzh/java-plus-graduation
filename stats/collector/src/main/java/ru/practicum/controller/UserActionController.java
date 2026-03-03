@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import ru.practicum.grpc.stats.action.UserActionProto;
 import ru.practicum.grpc.stats.collector.UserActionControllerGrpc;
-
 import ru.practicum.handler.UserActionHandler;
 
 @Slf4j

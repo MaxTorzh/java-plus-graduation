@@ -10,8 +10,8 @@ import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stats.action.ActionTypeProto;
 import ru.practicum.grpc.stats.action.UserActionProto;
-
 import ru.practicum.kafka.KafkaProducerService;
+
 import java.time.Instant;
 
 @Slf4j
