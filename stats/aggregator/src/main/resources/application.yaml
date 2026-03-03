@@ -17,3 +17,9 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  topic: user-actions
+  group-id: aggregator-group
+  enabled: ${KAFKA_ENABLED:true}
