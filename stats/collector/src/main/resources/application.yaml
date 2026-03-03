@@ -32,5 +32,10 @@ grpc:
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  topic: user-actions
+  topic: ${KAFKA_TOPIC:stats.user-actions.v1}
   enabled: ${KAFKA_ENABLED:true}
+
+logging:
+  level:
+    ru.practicum: DEBUG
+    org.apache.kafka: INFO
