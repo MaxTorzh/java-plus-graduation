@@ -10,7 +10,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>discovery-server</artifactId>
+    <artifactId>collector</artifactId>
 
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
