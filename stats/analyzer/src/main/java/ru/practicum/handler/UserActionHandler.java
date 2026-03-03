@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-
 import ru.practicum.model.ActionType;
 import ru.practicum.model.UserAction;
 import ru.practicum.repository.UserActionRepository;
+
 import java.util.Optional;
 
 @Slf4j

@@ -12,12 +12,12 @@ import ru.practicum.grpc.stats.recommendation.InteractionsCountRequestProto;
 import ru.practicum.grpc.stats.recommendation.RecommendedEventProto;
 import ru.practicum.grpc.stats.recommendation.SimilarEventsRequestProto;
 import ru.practicum.grpc.stats.recommendation.UserPredictionsRequestProto;
-
 import ru.practicum.model.ActionType;
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.model.UserAction;
 import ru.practicum.repository.SimilarityRepository;
 import ru.practicum.repository.UserActionRepository;
+
 import java.util.*;
 import java.util.stream.Collectors;
 

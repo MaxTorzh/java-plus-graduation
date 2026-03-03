@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
-
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.repository.SimilarityRepository;
 

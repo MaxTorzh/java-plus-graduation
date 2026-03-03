@@ -1,6 +1,3 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: aggregator
@@ -20,15 +17,3 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
-
-kafka:
-  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  group-id: ${KAFKA_GROUP_ID:aggregator-group}
-  auto-commit: ${KAFKA_AUTO_COMMIT:true}
-  action-topic: ${KAFKA_ACTION_TOPIC:user-actions}
-  similarity-topic: ${KAFKA_SIMILARITY_TOPIC:event-similarity}
-
-user-action:
-  view: 0.4
-  register: 0.8
-  like: 1.0

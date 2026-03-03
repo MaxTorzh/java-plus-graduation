@@ -1,34 +1,19 @@
-server:
-  port: 8083
-
 spring:
   application:
     name: analyzer
+  config:
+    import: "configserver:"
   cloud:
     config:
-      enabled: false
-    discovery:
-      enabled: false
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
 
 eureka:
   client:
-    enabled: false
-
-kafka:
-  enabled: false
-
-grpc:
-  server:
-    port: 9091
-  client:
-    GLOBAL:
-      address: 'discovery:///analyzer'
-      enableKeepAlive: true
-      negotiationType: PLAINTEXT
-
-logging:
-  level:
-    ru.practicum: DEBUG
-    org.springframework.boot: INFO
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
