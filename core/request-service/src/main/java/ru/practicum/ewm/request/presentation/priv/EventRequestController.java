@@ -34,8 +34,8 @@ public class EventRequestController {
     @GetMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getEventRequests(
-        @PathVariable @Positive Long userId,
-        @PathVariable @Positive Long eventId) {
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId) {
         log.info("Private: Received request to get list requests for event {} when initiator {}", eventId, userId);
         List<ParticipationRequestDto> result = requestService.getEventRequests(userId, eventId);
         log.info("Private: Received list requests for event {} when initiator {} : {}", eventId, userId, result);
@@ -46,17 +46,17 @@ public class EventRequestController {
     @PatchMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResultDto updateRequestsStatus(
-        @PathVariable @Positive Long userId,
-        @PathVariable @Positive Long eventId,
-        @Valid @RequestBody EventRequestStatusUpdateRequestDto requestStatusUpdate) {
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long eventId,
+            @Valid @RequestBody EventRequestStatusUpdateRequestDto requestStatusUpdate) {
         log.info("Private: Received request to change status requests {} for event {} when initiator {}",
-            requestStatusUpdate.getRequestIds(), eventId, userId);
+                requestStatusUpdate.getRequestIds(), eventId, userId);
         EventRequestStatusUpdateRequestParams requestParams = EventRequestStatusUpdateRequestParams.builder()
-            .userId(userId)
-            .eventId(eventId)
-            .requestIds(requestStatusUpdate.getRequestIds())
-            .status(enumMapper.toModelRequestStatus(requestStatusUpdate.getStatus()))
-            .build();
+                .userId(userId)
+                .eventId(eventId)
+                .requestIds(requestStatusUpdate.getRequestIds())
+                .status(enumMapper.toModelRequestStatus(requestStatusUpdate.getStatus()))
+                .build();
         EventRequestStatusUpdateResultDto result = requestService.updateRequestsStatus(requestParams);
         log.info("Private: Received list requests for event {} when initiator {} : {}", eventId, userId, result);
         return result;
