@@ -11,11 +11,24 @@
 
     <artifactId>core</artifactId>
     <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <modules>
-        <module>comment-service</module>
         <module>event-service</module>
-        <module>interaction-api</module>
-        <module>request-service</module>
+        <module>stats-client</module>
         <module>user-service</module>
+        <module>request-service</module>
+        <module>comment-service</module>
+        <module>interaction-api</module>
+        <module>collector</module>
+        <module>aggregator</module>
+        <module>analyzer</module>
+        <module>serialization</module>
     </modules>
+
 </project>
